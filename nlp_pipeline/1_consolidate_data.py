@@ -21,14 +21,12 @@ else:
             with open(file, 'r', encoding='utf-8') as f:
                 content = f.read()
             
-            # This handles cases where files might be empty
             if not content:
                 print(f" - Warning: {os.path.basename(file)} is empty. Skipping.")
                 continue
 
             fixed_content = content.replace('][', ',')
             
-            # Use StringIO to handle the string as a file
             df = pd.read_json(StringIO(fixed_content))
             df_list.append(df)
         except Exception as e:
@@ -40,16 +38,20 @@ else:
         print("\nConsolidating all data...")
         master_df = pd.concat(df_list, ignore_index=True)
 
-        # --- Data Cleaning and Normalization ---
+        # --- CORRECTED Data Cleaning and Normalization ---
+        # 1. Coalesce all 'title-like' columns into a single 'title' column
         if 'job_title' in master_df.columns:
-            master_df.rename(columns={'job_title': 'title'}, inplace=True)
+            master_df['title'] = master_df['title'].fillna(master_df['job_title'])
         if 'guide_title' in master_df.columns:
-            master_df.rename(columns={'guide_title': 'title'}, inplace=True)
+            master_df['title'] = master_df['title'].fillna(master_df['guide_title'])
         
+        # 2. Drop the old, now redundant columns
+        master_df.drop(columns=['job_title', 'guide_title'], errors='ignore', inplace=True)
+
+        # 3. Now that 'title' is consolidated, drop any rows where it's still missing
         master_df.dropna(subset=['title'], inplace=True)
         
         if 'summary' in master_df.columns:
-            # This is the updated way to fill missing values
             master_df['summary'] = master_df['summary'].fillna('')
         
         master_df.drop_duplicates(subset=['url'], inplace=True)
