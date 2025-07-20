@@ -2,20 +2,17 @@ import React, { useState } from 'react';
 import './App.css';
 
 function App() {
-  // State variables to store user input and results
   const [query, setQuery] = useState('');
-  const [role, setRole] = useState('gamer'); // Default role
+  const [role, setRole] = useState('gamer');
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Function to handle the search request
   const handleSearch = async (e) => {
-    e.preventDefault(); // Prevent form from reloading the page
+    e.preventDefault();
     setIsLoading(true);
     setResults([]);
 
     try {
-      // Send the query and role to our Flask backend API
       const response = await fetch('http://localhost:5001/search', {
         method: 'POST',
         headers: {
@@ -24,10 +21,13 @@ function App() {
         body: JSON.stringify({ query, role }),
       });
       const data = await response.json();
+      
+      // *** THIS IS THE NEW DEBUGGING LINE ***
+      console.log('Data from backend:', data); 
+      
       setResults(data);
     } catch (error) {
       console.error("Failed to fetch search results:", error);
-      // You could add error handling here, e.g., setResults([{title: 'Error fetching results'}]);
     }
 
     setIsLoading(false);
